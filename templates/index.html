@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            /* Um cinza claro para o fundo */
+            font-family: 'Inter', sans-serif;
+            /* Fonte moderna */
+        }
+
+        .container {
+            max-width: 1200px;
+            /* Aumenta a largura máxima do container */
+        }
+
+        .card {
+            border-radius: 0.75rem;
+            /* Cantos mais arredondados para os cartões */
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+            /* Sombra suave */
+        }
+
+        .form-group label {
+            font-weight: 600;
+            /* Deixa os rótulos mais destacados */
+            color: #495057;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 0.5rem;
+            /* Cantos arredondados para botões */
+            padding: 0.75rem 1.5rem;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+
+        .btn-danger {
+            border-radius: 0.5rem;
+            /* Cantos arredondados para botões */
+            font-weight: bold;
+            /* Permite que o texto do botão quebre linha se necessário */
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        .table thead th {
+            background-color: #e9ecef;
+            /* Fundo mais claro para o cabeçalho da tabela */
+            border-bottom: 2px solid #dee2e6;
+            font-weight: bold;
+            color: #343a40;
+            text-align: center;
+            /* Centraliza o texto nos cabeçalhos da tabela */
+            padding: 0.8rem;
+            /* Aumenta um pouco o padding */
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+            /* Efeito hover nas linhas da tabela */
+        }
+
+        .table tbody td {
+            text-align: center;
+            /* Centraliza o texto nas células da tabela */
+            padding: 0.8rem;
+            /* Aumenta um pouco o padding */
+            vertical-align: middle;
+            /* Centraliza verticalmente o conteúdo */
+        }
+
+        /* Nova classe para células que não devem quebrar linha */
+        .nowrap-cell {
+            white-space: nowrap;
+        }
+
+        /* Classes para ajustar larguras mínimas de colunas específicas */
+        .actions-column {
+            min-width: 180px;
+            /* Garante espaço suficiente para o botão */
+        }
+
+        .name-column {
+            min-width: 200px;
+            /* Garante largura mínima para o nome do cliente */
+        }
+
+        .alert {
+            border-radius: 0.5rem;
+        }
+
+        .user-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+
+        .user-info strong {
+            color: #343a40;
+        }
+    </style>
+
+    <script>
+        // Script para fazer as mensagens flash desaparecerem automaticamente
+        setTimeout(function () {
+            $(".alert").fadeOut("slow");
+        }, 5000);
+    </script>
+</head>
+
+<body>
+    <div class="container mt-5 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary mb-0">Separação e Conferência de Pedidos</h1>
+            <div class="user-info">
+                Bem-vindo(a), <strong>{{ usuario }}</strong>!
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-secondary ml-2">Sair</a>
+            </div>
+        </div>
+
+        {# Exibe mensagens flash, se houver #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="alert alert-{{ messages[0][0] }} alert-dismissible fade show" role="alert">
+            {{ messages[0][1] }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="card p-4 mb-4">
+            <h2 class="card-title h4 mb-3">Opções de Filtragem</h2>
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <label for="numped">Número do Pedido (Balcão)</label>
+                        <input type="text" class="form-control" id="numped" name="numped" placeholder="Ex: 1234567890"
+                            value="{{ form_data.numped }}">
+                    </div>
+
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <label for="numped_cond1">Número do Pedido (Transporte)</label>
+                        <input type="text" class="form-control" id="numped_cond1" name="numped_cond1"
+                            placeholder="Ex: 9876543210" value="{{ form_data.numped_cond1 }}">
+                    </div>
+
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <label for="codcli">Código do Cliente</label>
+                        <input type="text" class="form-control" id="codcli" name="codcli" placeholder="Ex: 12345"
+                            value="{{ form_data.codcli }}">
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <label for="data_inicio">Data Início</label>
+                        <input type="date" name="data_inicio" class="form-control" value="{{ form_data.data_inicio }}">
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <label for="data_fim">Data Fim</label>
+                        <input type="date" name="data_fim" class="form-control" value="{{ form_data.data_fim }}">
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <label for="filial">Filial</label>
+                        <select class="form-control" id="filial" name="filial">
+                            <option value="">Todas</option>
+                            <option value="1" {% if form_data.filial=='1' %}selected{% endif %}>1</option>
+                            <option value="2" {% if form_data.filial=='2' %}selected{% endif %}>2</option>
+                            <option value="3" {% if form_data.filial=='3' %}selected{% endif %}>3</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 d-flex align-items-end mb-3">
+                        <button type="submit" class="btn btn-primary btn-block">Buscar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            // Garante que apenas números sejam digitados nos campos
+            document.getElementById('numped').addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '');
+            });
+
+            document.getElementById('numped_cond1').addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '');
+            });
+
+            document.getElementById('codcli').addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '');
+            });
+        </script>
+
+        <div class="card p-4">
+            {# Removido o título "Resultados" #}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mt-3">
+                    <thead>
+                        <tr>
+                            <th class="text-center nowrap-cell">Número do Pedido (Balcão)</th>
+                            <th class="text-center nowrap-cell">Código Cliente</th>
+                            <th class="text-center name-column">Nome Cliente</th> {# Permite quebra de linha, com
+                            min-width #}
+                            <th class="text-center nowrap-cell">Valor Total</th>
+                            <th class="text-center nowrap-cell">Posição</th>
+                            <th class="text-center nowrap-cell">Data</th>
+                            <th class="text-center nowrap-cell">Filial</th>
+                            <th class="text-center actions-column">Ações</th> {# Permite quebra de linha, com min-width
+                            #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if result %}
+                        {% for pedido in result %}
+                        <tr>
+                            <td class="text-center nowrap-cell">{{ pedido['NUMPEDENTFUT'] }}</td>
+                            <td class="text-center nowrap-cell">{{ pedido['CODCLI'] }}</td>
+                            <td class="text-center name-column">{{ pedido['NOMECLIENTE'] }}</td> {# Permite quebra de
+                            linha #}
+                            <td class="text-center nowrap-cell">
+                                {{ pedido['VLTOTAL'] }}
+                            </td>
+                            <td class="text-center nowrap-cell">{{ pedido['POSICAO'] }}</td>
+                            <td class="text-center nowrap-cell">{{ pedido['DATA'] }}</td> {# Já formatado no Python #}
+                            <td class="text-center nowrap-cell">{{ pedido['CODFILIAL'] }}</td>
+                            <td class="text-center actions-column"> {# Permite quebra de linha para o botão #}
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="excluir" value="{{ pedido['NUMPED'] }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Excluir
+                                        Separação/Conferência</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">Nenhum pedido encontrado com os filtros
+                                aplicados.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
